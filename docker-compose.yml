@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+
+  gopdfapp:
+    tty: true
+    container_name: gopdfapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gopdfimage
+    volumes:
+      - .:/go/src/pdfsigning
+    ports:
+      - '80:8080'
