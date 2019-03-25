@@ -7,19 +7,67 @@
     <meta name="author" content="Otto Schuldt">
     <title>App to Sign PDFs</title>
     <link rel="shortcut icon" href="/style/images/favicon.png">
+    <style>
+        .centered {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            /* bring your own prefixes */
+            transform: translate(-50%, -50%);
+            background-color: #e3e3e3;
+        }
+        .centered * {
+            padding: 5px 10px;
+        }
+    </style>
 </head>
 <body>
 
-<div style="top: 50%; left: 50%">
+<div class="centered">
     <h2>Sign PDF</h2>
-    <form action="/" method="post">
+    <p id="error" style="color: red"></p>
+    <form action="/" method="post" enctype="multipart/form-data">
         <label style="color: #0f3e68">Upload the pdf file you want to sign off:</label>
         <br><br>
-        <input type="file" name="nf">
+        <input id="pdf_file" type="file" name="nf">
         <br><br>
-        <button type="submit">Upload</button>
+        <button type="button" onclick="return handleUpload(event)">Upload</button>
     </form>
 </div>
+
+<script>
+    function handleUpload(e) {
+        e.preventDefault();
+        let file = document.getElementById("pdf_file").files[0];
+        let xhr = new XMLHttpRequest();
+        let formData = new FormData();
+
+        // disable button
+        e.target.disabled = true;
+
+        // handle response
+        xhr.onreadystatechange = function () {
+            if(xhr.readyState === XMLHttpRequest.DONE){
+                if (xhr.status === 200){
+                    console.log("success!");
+                    document.getElementById("error").innerHTML = null;
+                }else if (xhr.status === 403){
+                    document.getElementById("error").innerHTML = xhr.responseText;
+                }else {
+                  alert("An error occurred.")
+                }
+            }
+            // enable button again
+            e.target.disabled = false;
+            // remove file
+            document.getElementById("pdf_file").value = null;
+        };
+
+        formData.append("nf", file);
+        xhr.open("POST", '/');
+        xhr.send(formData)
+    }
+</script>
 
 </body>
 </html>
