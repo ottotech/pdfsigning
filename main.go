@@ -44,7 +44,10 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request){
 	if ct != "application/pdf" {
 		errMsg := fmt.Sprintf("Error: You need to upload a pdf file! Not a file of type %v", ct)
 		w.WriteHeader(http.StatusForbidden)
-		log.Println(w.Write([]byte(errMsg)))
+		_, err := w.Write([]byte(errMsg))
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -74,7 +77,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request){
 		}
 	}()
 
-	// we rewind the uploaded file
+	// rewind to the beginning of the uploaded file
 	_, err = mf.Seek(0, 0)
 	if err != nil {
 		log.Println(err)
