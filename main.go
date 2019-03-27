@@ -96,7 +96,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// we run or great python script to generate the pdf with the signature
+	// we run the python script to generate the pdf with the signature
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	src := savePath
 	dest := filepath.Join(wd, "tmp", signedFileName)
@@ -140,6 +140,10 @@ func removeFilesFromTmpDir() error {
 		return err
 	}
 	for _, d := range dir {
+		// we don't want to delete our ``.keepdir`` because of Git.
+		if d.Name() == ".keepdir" {
+			continue
+		}
 		err = os.RemoveAll(path.Join("tmp", d.Name()))
 		if err != nil {
 			log.Println(err)
