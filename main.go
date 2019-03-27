@@ -59,13 +59,14 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create paths
+	// get working dir path
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	// create tmp saving path
 	savePath := filepath.Join(wd, "tmp", toBeSignedFileName)
 
 	// we create a new file to copy all the data from the uploaded file
@@ -101,7 +102,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	src := savePath
 	dest := filepath.Join(wd, "tmp", signedFileName)
 	t := time.Now()
-	date := t.Format("2006-01-02")
+	date := t.Format("2006-01-02")  // Go syntax to format date
 	cmd := exec.Command("python", pyScript, src, dest, date)
 	err = cmd.Run()
 	if err != nil {
@@ -115,7 +116,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SendSignedPdf(w http.ResponseWriter, r *http.Request) {
-	// get working directory
+	// get working dir path
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
@@ -124,12 +125,15 @@ func SendSignedPdf(w http.ResponseWriter, r *http.Request) {
 	}
 	// create path where the signed filename is
 	targetPath := filepath.Join(wd, "tmp", signedFileName)
+
+	// run this func after returning to do some cleanup
 	defer func() {
 		err := removeFilesFromTmpDir()
 		if err != nil {
 			log.Println(err)
 		}
 	}()
+	// serve file
 	http.ServeFile(w, r, targetPath)
 }
 
