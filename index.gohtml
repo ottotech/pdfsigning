@@ -32,6 +32,7 @@
         <input id="pdf_file" type="file" name="nf">
         <br><br>
         <button type="button" onclick="return handleUpload(event)">Upload</button>
+        <a hidden tabindex="-1" id="js_download_anchor" href="/download-signed-pdf" download="signed.pdf"></a>
     </form>
 </div>
 
@@ -51,6 +52,7 @@
                 if (xhr.status === 200){
                     console.log("success!");
                     document.getElementById("error").innerHTML = null;
+                    document.getElementById("js_download_anchor").click();  // download signed pdf
                 }else if (xhr.status === 403){
                     document.getElementById("error").innerHTML = xhr.responseText;
                 }else {
