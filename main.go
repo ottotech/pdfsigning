@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"pdfsigning/utils"
+	"time"
 )
 
 const (
@@ -99,7 +100,9 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	src := savePath
 	dest := filepath.Join(wd, "tmp", signedFileName)
-	cmd := exec.Command("python", pyScript, src, dest)
+	t := time.Now()
+	date := t.Format("2006-01-02")
+	cmd := exec.Command("python", pyScript, src, dest, date)
 	err = cmd.Run()
 	if err != nil {
 		log.Println(err)

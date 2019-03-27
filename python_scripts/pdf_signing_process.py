@@ -8,15 +8,17 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
 # unpack variables
-_, src, dest = argv
+_, src, dest, date = argv
 
 # create buffer
 buff = StringIO.StringIO()
 
 # create new PDF with Reportlab
 can = canvas.Canvas(buff, pagesize=A4)
-can.drawString(7, 800, "Hello world")
-can.drawString(7, 780, "Hello world")
+can.drawString(7, 800, "Signed by lequest.nl")
+can.drawString(7, 780, "Reason: Confidential LG")
+can.drawString(7, 760, "Location: Rotterdam")
+can.drawString(7, 740, "Date: %s" % date)
 can.save()
 
 # move to the beginning of the StringIO buffer
