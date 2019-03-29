@@ -17,7 +17,7 @@ import (
 const (
 	toBeSignedFileName = "tmp.pdf"
 	signedFileName     = "signed.pdf"
-	logoFileName       = "lequest_logo.png" // if you change this, change also the image file name as well
+	logoFileName       = "lequest_logo.png" // if you change this, change also the image file name
 )
 
 func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
