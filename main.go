@@ -60,7 +60,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get working dir
+	// get working dir path
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
@@ -128,12 +128,15 @@ func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// create path where the signed filename is
 	targetPath := filepath.Join(wd, "tmp", signedFileName)
+
+	// run this func after returning to do some cleanup
 	defer func() {
 		err := removeFilesFromTmpDir()
 		if err != nil {
 			log.Println(err)
 		}
 	}()
+	// serve file
 	http.ServeFile(w, r, targetPath)
 }
 
@@ -144,6 +147,10 @@ func removeFilesFromTmpDir() error {
 		return err
 	}
 	for _, d := range dir {
+		// we don't want to delete our ``.keepdir`` because of Git.
+		if d.Name() == ".keepdir" {
+			continue
+		}
 		err = os.RemoveAll(path.Join("tmp", d.Name()))
 		if err != nil {
 			log.Println(err)
