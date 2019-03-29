@@ -17,6 +17,7 @@ import (
 const (
 	toBeSignedFileName = "tmp.pdf"
 	signedFileName     = "signed.pdf"
+	logoFileName = "lequest_logo.png"  // if you change this, change also the image file name as well
 )
 
 func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,13 +60,14 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create paths
+	// get working dir
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	// create tmp saving path
 	savePath := filepath.Join(wd, "tmp", toBeSignedFileName)
 
 	// we create a new file to copy all the data from the uploaded file
@@ -85,6 +87,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// rewind to the beginning of the uploaded file
 	_, err = mf.Seek(0, 0)
 	if err != nil {
+		defer log.Println(removeFilesFromTmpDir())
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -92,29 +95,30 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// we copy the data from the uploaded file to the new created file
 	_, err = io.Copy(nf, mf)
 	if err != nil {
+		defer log.Println(removeFilesFromTmpDir())
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// we run or great python script to generate the pdf with the signature
+	// we run the python script to generate the pdf with the signature
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	src := savePath
 	dest := filepath.Join(wd, "tmp", signedFileName)
-	t := time.Now()
-	date := t.Format("2006-01-02")
-	cmd := exec.Command("python", pyScript, src, dest, date)
+	date := time.Now().Format("2006.01.02")
+	logoPath := filepath.Join(wd, logoFileName)
+	cmd := exec.Command("python", pyScript, src, dest, date, logoPath)
 	err = cmd.Run()
 	if err != nil {
+		defer log.Println(removeFilesFromTmpDir())
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	// if all goes well we send a response 200
 	w.WriteHeader(http.StatusOK)
 }
 
-func SendSignedPdf(w http.ResponseWriter, r *http.Request) {
+func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// get working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -152,7 +156,7 @@ func removeFilesFromTmpDir() error {
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", SignPdfHandler)
-	mux.HandleFunc("/download-signed-pdf", SendSignedPdf)
+	mux.HandleFunc("/download-signed-pdf", SendSignedPdfHandler)
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
