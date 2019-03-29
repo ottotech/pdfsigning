@@ -55,9 +55,9 @@ for i in range(0, existing_pdf.getNumPages()):
         can.rotate(-90)
         can.setFont("Helvetica-Bold", 10)
         can.drawString(0, 0, "Signed by lequest.nl")
-        can.drawString(0, -15, "Reason: Confidential LG")
-        can.drawString(0, -28, "Location: Rotterdam")
-        can.drawString(0, -41, "Date: %s" % date)
+        can.drawString(0, -14, "Reason: Confidential LG")
+        can.drawString(0, -29, "Location: Rotterdam")
+        can.drawString(0, -43, "Date: %s" % date)
         can.drawImage(
             image=im,
             x=130,

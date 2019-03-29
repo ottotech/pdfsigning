@@ -28,9 +28,13 @@
     <p id="error" style="color: red"></p>
     <form action="/" method="post" enctype="multipart/form-data">
         <label style="color: #0f3e68" for="pdf_file">Upload the pdf file you want to sign:</label>
+        <br>
         <input id="pdf_file" type="file" name="nf">
         <br><br>
-        <label style="color: #0f3e68" for="js_date">Pick up the date of signature (default: today's date.)</label>
+        <label style="color: #0f3e68" for="js_date">
+            Pick up the date (If no date is picked up we will use today's date)
+        </label>
+        <br>
         <input type="date" id="js_date">
         <br><br>
         <button type="button" onclick="return handleUpload(event)">Upload</button>
