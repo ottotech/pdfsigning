@@ -104,9 +104,20 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	src := savePath
 	dest := filepath.Join(wd, "tmp", signedFileName)
-	date := time.Now().Format("2006.01.02")
+	dateStr := r.FormValue("date")
+	if dateStr == "" {
+		dateStr = time.Now().Format("2006.01.02")	// format yyyy.mm.dd
+	}else {
+		date, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			dateStr = time.Now().Format("2006.01.02")	// format yyyy.mm.dd
+		}else {
+			dateStr = date.Format("2006.01.02")
+		}
+	}
+
 	logoPath := filepath.Join(wd, logoFileName)
-	cmd := exec.Command("python", pyScript, src, dest, date, logoPath)
+	cmd := exec.Command("python", pyScript, src, dest, dateStr, logoPath)
 	err = cmd.Run()
 	if err != nil {
 		defer log.Println(removeFilesFromTmpDir())

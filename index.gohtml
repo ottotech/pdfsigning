@@ -27,9 +27,11 @@
     <h2>Sign PDF</h2>
     <p id="error" style="color: red"></p>
     <form action="/" method="post" enctype="multipart/form-data">
-        <label style="color: #0f3e68">Upload the pdf file you want to sign off:</label>
-        <br><br>
+        <label style="color: #0f3e68" for="pdf_file">Upload the pdf file you want to sign:</label>
         <input id="pdf_file" type="file" name="nf">
+        <br><br>
+        <label style="color: #0f3e68" for="js_date">Pick up the date of signature (default: today's date.)</label>
+        <input type="date" id="js_date">
         <br><br>
         <button type="button" onclick="return handleUpload(event)">Upload</button>
         <a hidden tabindex="-1" id="js_download_anchor" href="/download-signed-pdf" download="signed.pdf"></a>
@@ -40,6 +42,7 @@
     function handleUpload(e) {
         e.preventDefault();
         let file = document.getElementById("pdf_file").files[0];
+        let date = document.getElementById("js_date").value;
         let xhr = new XMLHttpRequest();
         let formData = new FormData();
 
@@ -66,9 +69,11 @@
         };
 
         formData.append("nf", file);
+        formData.append("date", date);
         xhr.open("POST", '/');
         xhr.send(formData)
     }
+
 </script>
 
 </body>
