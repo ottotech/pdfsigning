@@ -17,7 +17,7 @@ import (
 const (
 	toBeSignedFileName = "tmp.pdf"
 	signedFileName     = "signed.pdf"
-	logoFileName = "lequest_logo.png"  // if you change this, change also the image file name as well
+	logoFileName       = "lequest_logo.png" // if you change this, change also the image file name as well
 )
 
 func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,12 +106,12 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	dest := filepath.Join(wd, "tmp", signedFileName)
 	dateStr := r.FormValue("date")
 	if dateStr == "" {
-		dateStr = time.Now().Format("2006.01.02")	// format yyyy.mm.dd
-	}else {
+		dateStr = time.Now().Format("2006.01.02") // format yyyy.mm.dd
+	} else {
 		date, err := time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			dateStr = time.Now().Format("2006.01.02")	// format yyyy.mm.dd
-		}else {
+			dateStr = time.Now().Format("2006.01.02") // format yyyy.mm.dd
+		} else {
 			dateStr = date.Format("2006.01.02")
 		}
 	}
