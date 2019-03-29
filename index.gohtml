@@ -59,6 +59,7 @@
                 if (xhr.status === 200){
                     console.log("success!");
                     document.getElementById("error").innerHTML = null;
+                    document.getElementById("js_date").value = null;
                     document.getElementById("js_download_anchor").click();  // download signed pdf
                 }else if (xhr.status === 403){
                     document.getElementById("error").innerHTML = xhr.responseText;
