@@ -137,6 +137,11 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
+	// we want to allow only one request at a time to access this process
+	// in order to avoid race conditions
+	mu.Lock()
+	defer mu.Unlock()
+
 	// get working directory
 	wd, err := os.Getwd()
 	if err != nil {
