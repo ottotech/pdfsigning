@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"pdfsigning/utils"
+	"sync"
 	"time"
 )
 
@@ -20,11 +21,17 @@ const (
 	logoFileName       = "lequest_logo.png" // if you change this, change also the image file name
 )
 
+var mu sync.Mutex
+
 func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		utils.RenderTemplate(w, "index.gohtml", nil)
 		return
 	}
+	// we want to allow only one request at a time to access this process
+	// in order to avoid race conditions
+	mu.Lock()
+	defer mu.Unlock()
 
 	// get file from request
 	mf, fh, fileErr := r.FormFile("nf")
