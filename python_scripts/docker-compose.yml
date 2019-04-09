@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  pdfapppython:
+    tty: true
+    container_name: pythonpdfapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pdfpythonapp
+    volumes:
+      - .:/pdfpy

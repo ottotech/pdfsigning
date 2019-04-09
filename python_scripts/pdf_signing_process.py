@@ -10,7 +10,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import inch
 
 # unpack variables
-_, src, dest, date, logo_path = argv
+_, src, dest, date, logo_path, encrypted, pwd = argv
 
 # read existing PDF
 existing_pdf = PdfFileReader(file(src, "rb"))
@@ -33,8 +33,8 @@ for i in range(0, existing_pdf.getNumPages()):
         # create new PDF with Reportlab
         can = canvas.Canvas(buff, pagesize=A4)
         can.setFont("Helvetica-Bold", 10)
-        can.drawString(x, y - 15, "Signed by lequest.nl")
-        can.drawString(x, y - 28, "Reason: Confidential LG")
+        can.drawString(x, y - 15, "Signed by Company")
+        can.drawString(x, y - 28, "Reason: Confidential")
         can.drawString(x, y - 41, "Location: Rotterdam")
         can.drawString(x, y - 54, "Date: %s" % date)
         can.drawImage(
@@ -54,8 +54,8 @@ for i in range(0, existing_pdf.getNumPages()):
         can.translate(dx=x, dy=y)  # new origin (0, 0)
         can.rotate(-90)
         can.setFont("Helvetica-Bold", 10)
-        can.drawString(0, 0, "Signed by lequest.nl")
-        can.drawString(0, -14, "Reason: Confidential LG")
+        can.drawString(0, 0, "Signed by company.nl")
+        can.drawString(0, -14, "Reason: Confidential")
         can.drawString(0, -29, "Location: Rotterdam")
         can.drawString(0, -43, "Date: %s" % date)
         can.drawImage(
@@ -76,8 +76,22 @@ for i in range(0, existing_pdf.getNumPages()):
     page.mergePage(new_pdf.getPage(0))
     pdf_writer.addPage(page)
 
-# finally, write to destination
-outputStream = file(dest, "wb")
-pdf_writer.write(outputStream)
-outputStream.seek(0)
-outputStream.close()
+# add meta data to pdf, change this to meet your needs
+data = {
+    '/Title': 'Shared PDF',
+    '/Author': 'Author Name',
+    '/Subject': 'Shared PDF',
+}
+pdf_writer.addMetadata(data)
+
+# add encryption to pdf if necessary
+owner_pwd = 'secret'
+if encrypted == 'yes':
+    pdf_writer.encrypt(user_pwd=pwd, owner_pwd=owner_pwd, use_128bit=True)
+
+# write to destination
+with file(dest, "wb") as outputStream:
+    pdf_writer.write(outputStream)
+
+    # rewind to the beginning of file
+    outputStream.seek(0)

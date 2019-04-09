@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"pdfsigning/utils"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -107,10 +109,14 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// we run the python script to generate the pdf with the signature
-	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
+
+	// get source path
 	src := savePath
+
+	// get destination path
 	dest := filepath.Join(wd, "tmp", signedFileName)
+
+	// get date
 	dateStr := r.FormValue("date")
 	if dateStr == "" {
 		dateStr = time.Now().Format("2006.01.02") // format yyyy.mm.dd
@@ -122,13 +128,37 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 			dateStr = date.Format("2006.01.02")
 		}
 	}
-
+	// get company logo path
 	logoPath := filepath.Join(wd, logoFileName)
-	cmd := exec.Command("python", pyScript, src, dest, dateStr, logoPath)
+
+	// get encryption flag
+	encrypted, err := strconv.ParseBool(r.FormValue("encrypted"))
+	if err != nil {
+		encrypted = false
+	}
+	var encryptionFlag string
+	if encrypted {
+		encryptionFlag = "yes"
+	}else {
+		encryptionFlag = "no"
+	}
+
+	// get password for encryption
+	pwd := r.FormValue("password")
+	if pwd == "" {
+		pwd = "xxx" // the python script is waiting for any password, this is our default
+	}
+
+	// run the python script to generate the pdf with the signature
+	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
+	cmd := exec.Command("python", pyScript, src, dest, dateStr, logoPath, encryptionFlag, pwd)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr  // if there is an error we want to see the stderr
 	err = cmd.Run()
 	if err != nil {
 		defer log.Println(removeFilesFromTmpDir())
 		log.Println(err)
+		log.Println(stderr.String())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

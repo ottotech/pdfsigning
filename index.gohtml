@@ -10,7 +10,7 @@
     <style>
         .centered {
             position: fixed;
-            top: 20%;
+            top: 40%;
             left: 50%;
             /* bring your own prefixes */
             transform: translate(-50%, -50%);
@@ -19,23 +19,35 @@
         .centered * {
             padding: 5px 10px;
         }
+
+        .colored {
+            color: #0f3e68;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
 
 <div class="centered">
-    <h2>Sign PDF</h2>
-    <p id="error" style="color: red"></p>
+    <h2 style="margin-bottom: 6px">Sign PDF</h2>
+    <p id="error" style="color: red; margin: 0"></p>
     <form action="/" method="post" enctype="multipart/form-data">
-        <label style="color: #0f3e68" for="pdf_file">Upload the pdf file you want to sign:</label>
+        <label class="colored" for="pdf_file">Upload the pdf file you want to sign:</label>
         <br>
         <input id="pdf_file" type="file" name="nf">
         <br><br>
-        <label style="color: #0f3e68" for="js_date">
-            Pick up a date (If no date is picked up we will use today's date)
+        <label class="colored" for="js_date">
+            Pick up a date (if no date is selected we will use today's date)
         </label>
         <br>
         <input type="date" id="js_date">
+        <br><br>
+        <label class="colored" for="js_encryption">Do you want to encrypt the pdf?</label>
+        <input onclick="return handleEncryptionStatus(event)" type="checkbox" id="js_encryption" name="encryption">
+        <br><br>
+        <label class="colored" for="js_password">Password for encryption</label>
+        <br>
+        <input type="password" id="js_password" name="password">
         <br><br>
         <button type="button" onclick="return handleUpload(event)">Upload</button>
         <a hidden tabindex="-1" id="js_download_anchor" href="/download-signed-pdf" download="signed.pdf"></a>
@@ -47,8 +59,26 @@
         e.preventDefault();
         let file = document.getElementById("pdf_file").files[0];
         let date = document.getElementById("js_date").value;
+        let encrypted = document.getElementById("js_encryption").checked;
+        let password = document.getElementById("js_password").value;
+        let errorParagraph = document.getElementById("error");
         let xhr = new XMLHttpRequest();
         let formData = new FormData();
+
+        // file input validation
+        if (typeof file === "undefined") {
+            errorParagraph.innerText = "Error: You need to upload a pdf file!";
+            return
+        }
+
+        // encryption and password validation
+        if (encrypted && password === "") {
+            errorParagraph.innerHTML = "Error: You need to specify a password for encryption.";
+            return
+        }else if (!encrypted && password !== "") {
+            errorParagraph.innerHTML = "Error: If you want to encrypt the pdf you need to tick the encryption checkbox.";
+            return
+        }
 
         // disable button
         e.target.disabled = true;
@@ -58,13 +88,17 @@
             if(xhr.readyState === XMLHttpRequest.DONE){
                 if (xhr.status === 200){
                     console.log("success!");
+                    // on success do some cleanup
                     document.getElementById("error").innerHTML = null;
                     document.getElementById("js_date").value = null;
+                    document.getElementById("js_encryption").checked = false;
+                    document.getElementById("js_password").value = null;
                     document.getElementById("js_download_anchor").click();  // download signed pdf
                 }else if (xhr.status === 403){
-                    document.getElementById("error").innerHTML = xhr.responseText;
+                    errorParagraph.innerHTML = xhr.responseText;
                 }else {
-                  alert("An error occurred.")
+                    errorParagraph.innerHTML = null;
+                    alert("An error occurred.")
                 }
             }
             // enable button again
@@ -75,10 +109,18 @@
 
         formData.append("nf", file);
         formData.append("date", date);
+        formData.append("encrypted", encrypted);
+        formData.append("password", password);
         xhr.open("POST", '/');
         xhr.send(formData)
     }
 
+    function handleEncryptionStatus(e) {
+        let status = e.target.checked;
+        if (!status) {
+            document.getElementById("js_password").value = null;
+        }
+    }
 </script>
 
 </body>
