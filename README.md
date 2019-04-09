@@ -1,9 +1,8 @@
 ## pdfsigning
 
-pdfsigning signs pdfs with a simple generic stamp in every page of a pdf at the upper-left-corner regardless the 
-orientation of the page. It also stamps a logo (274x82) next to the stamp. And it also encrypts the pdf if the user 
-requires it so.
-
+*pdfsigning* is a small tool to sign PDFs files with a simple generic stamp on each page at the 
+upper-left-corner, regardless the orientation of the page. It also draws a logo (274x82) next to the stamp. And it 
+also encrypts the pdf if the user requires it so.
 
 ## Install
 
@@ -12,13 +11,13 @@ Simply run:
 ```
 docker-compose up -d
 ```
-at root level to start the process and go to: http://localhost/
+at root level to start the process and go to http://localhost/ to see the app in action.
 
 ## Common Application Directories
 
 ### `/python_scripts`
 
-*/python_scripts* contains a python script that is used by the Golang app under the hood to sign the pages of the pdf
+*/python_scripts* contains a python script that is used under the hood by the Golang app to sign the pages of the pdf
 file with the reportlab and PyPDF2 libraries. This directory also has a Dockerfile and a docker-compose.yml file you can 
 run if you want to test or change the pdf signing functionality with python.
 
