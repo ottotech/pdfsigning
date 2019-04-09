@@ -20,7 +20,7 @@ import (
 const (
 	toBeSignedFileName = "tmp.pdf"
 	signedFileName     = "signed.pdf"
-	logoFileName       = "lequest_logo.png" // if you change this, change also the image file name
+	logoFileName       = "company_logo.png" // if you change this, change also the image file name
 )
 
 var mu sync.Mutex
