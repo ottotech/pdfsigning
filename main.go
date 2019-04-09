@@ -153,7 +153,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	cmd := exec.Command("python", pyScript, src, dest, dateStr, logoPath, encryptionFlag, pwd)
 	var stderr bytes.Buffer
-	cmd.Stderr = &stderr  // if there is an error we want to see the stderr
+	cmd.Stderr = &stderr  // if there is an error we want to be able to read from the stderr
 	err = cmd.Run()
 	if err != nil {
 		defer log.Println(removeFilesFromTmpDir())
