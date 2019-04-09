@@ -1,6 +1,6 @@
 ## pdfsigning
 
-*pdfsigning* is a small tool to sign PDFs files with a simple generic stamp on each page at the 
+*pdfsigning* is a small tool to sign PDF files with a simple generic stamp on each page at the 
 upper-left-corner, regardless the orientation of the page. It also draws a logo (274x82) next to the stamp. And it 
 also encrypts the pdf if the user requires it so.
 
