@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+var _logger *log.Logger
+
 const (
 	toBeSignedFileName = "tmp.pdf"
 	signedFileName     = "signed.pdf"
@@ -41,17 +43,17 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		if fileErr == http.ErrMissingFile {
 			errMsg := "Error: You need to upload a pdf file!"
 			w.WriteHeader(http.StatusForbidden)
-			log.Println(w.Write([]byte(errMsg)))
+			_, _ = w.Write([]byte(errMsg))
 			return
 		}
-		log.Println(fileErr)
+		_logger.Println(fileErr)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer func() {
 		err := mf.Close()
 		if err != nil {
-			log.Println(err)
+			_logger.Println(err)
 		}
 	}()
 
@@ -64,7 +66,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, err := w.Write([]byte(errMsg))
 		if err != nil {
-			log.Println(err)
+			_logger.Println(err)
 		}
 		return
 	}
@@ -72,7 +74,7 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// get working dir path
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		_logger.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -82,30 +84,40 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// we create a new file to copy all the data from the uploaded file
 	nf, err := os.Create(savePath)
 	if err != nil {
-		log.Println(err)
+		_logger.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer func() {
 		err := nf.Close()
 		if err != nil {
-			log.Println(err)
+			_logger.Println(err)
 		}
 	}()
 
 	// rewind to the beginning of the uploaded file
 	_, err = mf.Seek(0, 0)
 	if err != nil {
-		defer log.Println(removeFilesFromTmpDir())
-		log.Println(err)
+		defer func() {
+			err := removeFilesFromTmpDir()
+			if err != nil {
+				_logger.Println(err)
+			}
+		}()
+		_logger.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	// we copy the data from the uploaded file to the new created file
 	_, err = io.Copy(nf, mf)
 	if err != nil {
-		defer log.Println(removeFilesFromTmpDir())
-		log.Println(err)
+		defer func() {
+			err := removeFilesFromTmpDir()
+			if err != nil {
+				_logger.Println(err)
+			}
+		}()
+		_logger.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -119,11 +131,11 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// get date
 	dateStr := r.FormValue("date")
 	if dateStr == "" {
-		dateStr = time.Now().Format("2006.01.02") // format yyyy.mm.dd
+		dateStr = time.Now().Format("2006.01.02")
 	} else {
 		date, err := time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			dateStr = time.Now().Format("2006.01.02") // format yyyy.mm.dd
+			dateStr = time.Now().Format("2006.01.02")
 		} else {
 			dateStr = date.Format("2006.01.02")
 		}
@@ -153,12 +165,17 @@ func SignPdfHandler(w http.ResponseWriter, r *http.Request) {
 	pyScript := filepath.Join(wd, "python_scripts", "pdf_signing_process.py")
 	cmd := exec.Command("python", pyScript, src, dest, dateStr, logoPath, encryptionFlag, pwd)
 	var stderr bytes.Buffer
-	cmd.Stderr = &stderr  // if there is an error we want to be able to read from the stderr
+	cmd.Stderr = &stderr  // if there is an error we want to be able to read from stderr
 	err = cmd.Run()
 	if err != nil {
-		defer log.Println(removeFilesFromTmpDir())
-		log.Println(err)
-		log.Println(stderr.String())
+		defer func() {
+			err := removeFilesFromTmpDir()
+			if err != nil {
+				_logger.Println(err)
+			}
+		}()
+		_logger.Println(err)
+		_logger.Println(stderr.String())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -175,7 +192,7 @@ func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
 	// get working directory
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		_logger.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -186,7 +203,7 @@ func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		err := removeFilesFromTmpDir()
 		if err != nil {
-			log.Println(err)
+			_logger.Println(err)
 		}
 	}()
 	// serve file
@@ -196,7 +213,7 @@ func SendSignedPdfHandler(w http.ResponseWriter, r *http.Request) {
 func removeFilesFromTmpDir() error {
 	dir, err := ioutil.ReadDir("./tmp")
 	if err != nil {
-		log.Println(err)
+		_logger.Println(err)
 		return err
 	}
 	for _, d := range dir {
@@ -206,7 +223,7 @@ func removeFilesFromTmpDir() error {
 		}
 		err = os.RemoveAll(path.Join("tmp", d.Name()))
 		if err != nil {
-			log.Println(err)
+			_logger.Println(err)
 			return err
 		}
 	}
@@ -214,9 +231,17 @@ func removeFilesFromTmpDir() error {
 }
 
 func main() {
+	logFile, err := os.OpenFile("error.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_logger = log.New(logFile, "Error Logger:\t", log.Ldate|log.Ltime|log.Lshortfile)
+	defer logFile.Close()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", SignPdfHandler)
 	mux.HandleFunc("/download-signed-pdf", SendSignedPdfHandler)
+	mux.Handle("/favicon.ico", http.NotFoundHandler())
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
